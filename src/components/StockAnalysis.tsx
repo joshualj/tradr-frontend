@@ -1,7 +1,7 @@
 // tradr-web-app/src/components/StockAnalysis.tsx
 
-import React, { useState } from 'react'; // Import useState
-import { gql, useLazyQuery } from '@apollo/client'; // Use useLazyQuery for manual trigger
+import React, { useState } from 'react';
+import { gql, useLazyQuery } from '@apollo/client';
 
 // Define your GraphQL query using gql tag
 const GET_STOCK_ANALYSIS = gql`
@@ -33,62 +33,59 @@ interface GetStockAnalysisData {
 }
 
 const StockAnalysis: React.FC = () => {
-  // 1. State variables for user inputs
   const [ticker, setTicker] = useState<string>('AAPL');
   const [duration, setDuration] = useState<number>(3);
   const [unit, setUnit] = useState<string>('month');
-  const [submitted, setSubmitted] = useState<boolean>(false); // To control when to show results
+  const [submitted, setSubmitted] = useState<boolean>(false);
 
-  // 2. Use useLazyQuery for manual query triggering
-  //    It returns a function (executeSearch) to trigger the query, and query results.
   const [executeSearch, { loading, error, data, called }] = useLazyQuery<GetStockAnalysisData>(GET_STOCK_ANALYSIS);
 
-  // 3. Handle form submission
   const handleSubmit = (event: React.FormEvent) => {
-    event.preventDefault(); // Prevent default form submission behavior (page reload)
-    setSubmitted(true); // Mark that a submission has occurred
-    executeSearch({ variables: { ticker, duration, unit } }); // Trigger the query with current state
+    event.preventDefault();
+    setSubmitted(true);
+    executeSearch({ variables: { ticker, duration, unit } });
   };
 
-  // Helper function to render analysis results
   const renderAnalysisResult = () => {
-    if (!called && !submitted) return null; // Don't show anything until first search attempt
-    if (loading) return <p>Loading stock analysis...</p>;
-    if (error) return <p style={{ color: 'red' }}>Error: {error.message}</p>;
+    if (!called && !submitted) return null;
+    if (loading) return <p className="text-center text-gray-600">Loading stock analysis...</p>;
+    if (error) return <p className="text-center text-red-600">Error: {error.message}</p>;
 
     const analysis = data?.analyzeStock;
 
-    if (!analysis) return <p>No analysis data found.</p>;
+    if (!analysis) return <p className="text-center text-gray-500">No analysis data found.</p>;
 
     return (
-      <div style={{ marginTop: '20px', padding: '15px', border: '1px solid #ccc', borderRadius: '8px' }}>
-        <h3>Analysis Results for {analysis.receivedTicker}</h3>
-        <p>{analysis.message}</p>
+      <div className="mt-6 p-4 border border-gray-200 rounded-lg shadow-sm bg-white">
+        <h3 className="text-xl font-semibold text-indigo-700 mb-2">Analysis Results for {analysis.receivedTicker}</h3>
+        <p className="text-gray-700 mb-1">{analysis.message}</p>
         {analysis.isStatisticallySignificant !== null && (
-          <p>
+          <p className="text-gray-700 mb-1">
             Statistically Significant:{" "}
-            <strong>{analysis.isStatisticallySignificant ? "Yes" : "No"}</strong>
+            <strong className={`${analysis.isStatisticallySignificant ? 'text-green-600' : 'text-red-600'}`}>
+              {analysis.isStatisticallySignificant ? "Yes" : "No"}
+            </strong>
           </p>
         )}
         {analysis.pValue !== null && (
-          <p>
-            P-Value: <strong>{analysis.pValue.toFixed(4)}</strong>
+          <p className="text-gray-700">
+            P-Value: <strong className="text-indigo-800">{analysis.pValue.toFixed(4)}</strong>
           </p>
         )}
         {analysis.error && (
-          <p style={{ color: 'red' }}>Analysis Error: {analysis.error}</p>
+          <p className="text-red-600 mt-2">Analysis Error: {analysis.error}</p>
         )}
       </div>
     );
   };
 
   return (
-    <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif', maxWidth: '600px', margin: 'auto' }}>
-      <h2>Stock Analysis Tool</h2>
+    <div className="p-4 bg-gray-50 rounded-lg shadow-inner">
+      <h2 className="text-2xl font-bold text-center text-indigo-700 mb-6">Individual Stock Lookup</h2>
 
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px', padding: '20px', border: '1px solid #eee', borderRadius: '8px', backgroundColor: '#f9f9f9' }}>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4 p-5 border border-gray-200 rounded-xl shadow-md bg-white">
         <div>
-          <label htmlFor="tickerInput" style={{ display: 'block', marginBottom: '5px' }}>Stock Ticker:</label>
+          <label htmlFor="tickerInput" className="block text-gray-700 text-sm font-semibold mb-2">Stock Ticker:</label>
           <input
             id="tickerInput"
             type="text"
@@ -96,32 +93,32 @@ const StockAnalysis: React.FC = () => {
             onChange={(e) => setTicker(e.target.value.toUpperCase())}
             placeholder="e.g., AAPL, GOOGL"
             required
-            style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
+            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 transition duration-200"
           />
         </div>
 
-        <div style={{ display: 'flex', gap: '15px' }}>
-          <div style={{ flex: 1 }}>
-            <label htmlFor="durationInput" style={{ display: 'block', marginBottom: '5px' }}>Duration Value:</label>
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex-1">
+            <label htmlFor="durationInput" className="block text-gray-700 text-sm font-semibold mb-2">Duration Value:</label>
             <input
               id="durationInput"
               type="number"
               value={duration}
-              onChange={(e) => setDuration(parseInt(e.target.value, 10) || 0)} // Parse to integer
+              onChange={(e) => setDuration(parseInt(e.target.value, 10) || 0)}
               min="1"
               required
-              style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 transition duration-200"
             />
           </div>
 
-          <div style={{ flex: 1 }}>
-            <label htmlFor="unitSelect" style={{ display: 'block', marginBottom: '5px' }}>Duration Unit:</label>
+          <div className="flex-1">
+            <label htmlFor="unitSelect" className="block text-gray-700 text-sm font-semibold mb-2">Duration Unit:</label>
             <select
               id="unitSelect"
               value={unit}
               onChange={(e) => setUnit(e.target.value)}
               required
-              style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 transition duration-200 bg-white"
             >
               <option value="day">Day(s)</option>
               <option value="week">Week(s)</option>
@@ -133,13 +130,12 @@ const StockAnalysis: React.FC = () => {
 
         <button
           type="submit"
-          style={{ padding: '10px 15px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontSize: '16px' }}
+          className="px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition duration-200"
         >
           Analyze Stock
         </button>
       </form>
 
-      {/* Render results based on state */}
       {renderAnalysisResult()}
     </div>
   );
