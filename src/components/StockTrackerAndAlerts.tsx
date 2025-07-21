@@ -228,9 +228,9 @@ function StockTrackerAndAlerts() {
 
   return (
     <div className="p-4 bg-gray-50 rounded-lg shadow-inner">
-      <h1 className="text-3xl sm:text-4xl font-bold text-center text-indigo-700 mb-6">
-        📈 My Tracked Stocks & Alerts
-      </h1>
+      <h2 className="text-2xl font-bold text-center text-indigo-700 mb-6">
+        My Tracked Stocks & Alerts
+      </h2>
 
       {userId && (
         <div className="mb-6 text-center text-sm text-gray-600">
