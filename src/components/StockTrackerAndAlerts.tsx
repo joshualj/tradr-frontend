@@ -1,25 +1,27 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { initializeApp } from 'firebase/app';
-import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
-import type { Auth } from 'firebase/auth';
+// Removed Firebase imports as they are now handled by App.tsx
+// import { initializeApp } from 'firebase/app';
+// import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
+import type { Auth } from 'firebase/auth'; // Keep type import
 import { getFirestore, doc, setDoc, onSnapshot, collection } from 'firebase/firestore';
-import type { Firestore } from 'firebase/firestore';
+import type { Firestore } from 'firebase/firestore'; // Keep type import
 
-// Declare global variables provided by the Canvas environment OR defined by Vite
-// These declarations are now also in src/vite-env.d.ts for TypeScript linting
-declare const __firebase_config: string;
-declare const __app_id: string;
-declare const __initial_auth_token: string | null;
+// Removed global variable declarations as they are now used in App.tsx
+// declare const __firebase_config: string;
+// declare const __app_id: any;
+// declare const __initial_auth_token: string;
 
-// Safely parse firebaseConfig: if it's already an object, use it directly; otherwise, parse it.
-const firebaseConfig = typeof __firebase_config === 'string' ? JSON.parse(__firebase_config) : __firebase_config;
+// Removed parsing logic as it's now in App.tsx
+// const firebaseConfig = typeof __firebase_config === 'string' ? JSON.parse(__firebase_config) : __firebase_config;
+// const appId = typeof __app_id === 'string' && !__app_id.startsWith('{') && !__app_id.startsWith('[') ? __app_id : JSON.parse(__app_id);
+// const initialAuthToken = JSON.parse(__initial_auth_token);
 
-// Ensure appId correctly uses the __app_id global variable (parse if it's a stringified JSON)
-const appId = typeof __app_id === 'string' && !__app_id.startsWith('{') && !__app_id.startsWith('[') ? __app_id : JSON.parse(__app_id);
-
-// Parse initialAuthToken if it's a string, otherwise keep it null
-const initialAuthToken = __initial_auth_token === 'null' ? null : __initial_auth_token;
-
+// Define an interface for the props StockTrackerAndAlerts will receive
+interface StockTrackerAndAlertsProps {
+  db: Firestore | null;
+  auth: Auth | null;
+  userId: string | null;
+}
 
 // Define an interface for the Alert object to provide type safety
 interface Alert {
@@ -34,16 +36,20 @@ interface Alert {
   isRead: boolean;
 }
 
-function StockTrackerAndAlerts() {
-  const [db, setDb] = useState<Firestore | null>(null);
-  const [auth, setAuth] = useState<Auth | null>(null);
-  const [userId, setUserId] = useState<string | null>(null);
+// Update the function signature to accept props
+function StockTrackerAndAlerts({ db, auth, userId }: StockTrackerAndAlertsProps) {
+  // Removed db, auth, userId states as they are now passed as props
+  // const [db, setDb] = useState<Firestore | null>(null);
+  // const [auth, setAuth] = useState<Auth | null>(null);
+  // const [userId, setUserId] = useState<string | null>(null);
+
   const [trackedStocks, setTrackedStocks] = useState<string[]>([]);
   const [userAlerts, setUserAlerts] = useState<Alert[]>([]);
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState<'success' | 'error' | ''>('');
   const [newStock, setNewStock] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
+  // Removed isLoading state as auth loading is now handled by App.tsx
+  // const [isLoading, setIsLoading] = useState(true);
 
   const messageTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -70,47 +76,22 @@ function StockTrackerAndAlerts() {
     return String(error);
   };
 
-  useEffect(() => {
-    try {
-      const app = initializeApp(firebaseConfig);
-      const firestore = getFirestore(app);
-      const firebaseAuth = getAuth(app);
+  // Removed Firebase initialization useEffect as it's now in App.tsx
+  // useEffect(() => { ... }, []); // THIS IS THE KEY REMOVAL
 
-      setDb(firestore);
-      setAuth(firebaseAuth);
+  // Use a local appId variable, assuming it's still globally available or passed down if needed
+  // For this context, we'll assume appId is still globally accessible as it's defined in App.tsx's scope
+  // If appId is truly global, no change needed here. If it needs to be passed, it should be a prop.
+  // Given the previous context, appId is defined in App.tsx and used in the global scope of this file.
+  // To be robust, it should ideally be passed as a prop, but for now, we'll rely on its global availability.
+  // Assuming appId is accessible from the top-level App.tsx context.
+  // If not, you'd need to add it to StockTrackerAndAlertsProps.
+  const currentAppId = typeof __app_id === 'string' && !__app_id.startsWith('{') && !__app_id.startsWith('[') ? __app_id : JSON.parse(__app_id);
 
-      const unsubscribe = onAuthStateChanged(firebaseAuth, async (user) => {
-        if (user) {
-          setUserId(user.uid);
-          console.log('User signed in:', user.uid);
-        } else {
-          try {
-            if (initialAuthToken) {
-              await signInWithCustomToken(firebaseAuth, initialAuthToken);
-              console.log('Signed in with custom token.');
-            } else {
-              await signInAnonymously(firebaseAuth);
-              console.log('Signed in anonymously.');
-            }
-          } catch (error: unknown) {
-            console.error('Error signing in:', error);
-            showMessage('Error signing in: ' + getErrorMessage(error), 'error');
-          }
-        }
-        setIsLoading(false);
-      });
-
-      return () => unsubscribe();
-    } catch (error: unknown) {
-      console.error("Firebase initialization error:", error);
-      showMessage("Failed to initialize Firebase. Check console for details: " + getErrorMessage(error), 'error');
-      setIsLoading(false);
-    }
-  }, []);
 
   useEffect(() => {
     if (db && userId) {
-      const userStocksDocRef = doc(db, `artifacts/${appId}/users/${userId}/userStocks/trackedStocksDoc`);
+      const userStocksDocRef = doc(db, `artifacts/${currentAppId}/users/${userId}/userStocks/trackedStocksDoc`);
 
       const unsubscribe = onSnapshot(userStocksDocRef, (docSnap) => {
         if (docSnap.exists()) {
@@ -128,11 +109,11 @@ function StockTrackerAndAlerts() {
 
       return () => unsubscribe();
     }
-  }, [db, userId, appId]);
+  }, [db, userId, currentAppId]); // Depend on db, userId, and currentAppId props
 
   useEffect(() => {
     if (db && userId) {
-      const alertsCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/userAlerts`);
+      const alertsCollectionRef = collection(db, `artifacts/${currentAppId}/users/${userId}/userAlerts`);
       
       const unsubscribe = onSnapshot(alertsCollectionRef, (snapshot) => {
         const alerts: Alert[] = [];
@@ -149,7 +130,7 @@ function StockTrackerAndAlerts() {
 
       return () => unsubscribe();
     }
-  }, [db, userId, appId]);
+  }, [db, userId, currentAppId]); // Depend on db, userId, and currentAppId props
 
   const addStock = async () => {
     if (!newStock.trim()) {
@@ -172,11 +153,11 @@ function StockTrackerAndAlerts() {
     }
 
     try {
-      const userDocRef = doc(db, `artifacts/${appId}/users/${userId}`);
+      const userDocRef = doc(db, `artifacts/${currentAppId}/users/${userId}`);
       await setDoc(userDocRef, { lastActive: new Date().toISOString() }, { merge: true });
       console.log('User document created/updated:', userId);
 
-      const userStocksDocRef = doc(db, `artifacts/${appId}/users/${userId}/userStocks/trackedStocksDoc`);
+      const userStocksDocRef = doc(db, `artifacts/${currentAppId}/users/${userId}/userStocks/trackedStocksDoc`);
       const updatedStocks = [...trackedStocks, normalizedNewStock];
       await setDoc(userStocksDocRef, {
         userId: userId,
@@ -199,7 +180,7 @@ function StockTrackerAndAlerts() {
 
     const updatedStocks = trackedStocks.filter(stock => stock !== stockToRemove);
     try {
-      const userStocksDocRef = doc(db, `artifacts/${appId}/users/${userId}/userStocks/trackedStocksDoc`);
+      const userStocksDocRef = doc(db, `artifacts/${currentAppId}/users/${userId}/userStocks/trackedStocksDoc`);
       await setDoc(userStocksDocRef, {
         userId: userId,
         stocks: updatedStocks,
@@ -218,16 +199,12 @@ function StockTrackerAndAlerts() {
     return date.toLocaleString();
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100">
-        <div className="text-lg font-semibold text-gray-700">Loading Tradr App...</div>
-      </div>
-    );
-  }
+  // Removed isLoading check here as App.tsx handles the main loading state
+  // if (isLoading) { ... }
 
   return (
     <div className="p-4 bg-gray-50 rounded-lg shadow-inner">
+      {/* Changed h1 to h2 and adjusted text size for consistency */}
       <h2 className="text-2xl font-bold text-center text-indigo-700 mb-6">
         My Tracked Stocks & Alerts
       </h2>

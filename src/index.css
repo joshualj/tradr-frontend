@@ -3,23 +3,23 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Global styles that complement Tailwind */
-body {
-  /* Set a default font. Tailwind's font-sans, font-serif, font-mono will override this for specific elements. */
-  /* We are using 'Inter' in App.tsx and other components, so ensuring it's loaded globally or via CDN is good. */
-  /* If 'Inter' is not loaded via CDN or a font loader, this will fall back to sans-serif. */
-  font-family: 'Inter', sans-serif;
-  
-  /* Ensure the body takes full height and covers the background set in App.tsx */
-  min-height: 100vh;
-  margin: 0; /* Remove default browser margin */
+/* CRITICAL: Ensure html and body take full viewport dimensions */
+html, body, #root { /* Also include #root here */
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden; /* Prevent horizontal scrollbar if content overflows */
+  /* Remove overflow-y: hidden; if you want vertical scrolling */
 }
 
-/* You can add any other truly global, non-Tailwind-specific base styles here if absolutely needed. */
-/* However, for most styling, prefer using Tailwind utility classes directly in your components. */
+body {
+  font-family: 'Inter', sans-serif; /* Ensure Inter font is used */
+  /* min-height: 100vh; is redundant if height: 100% is set on html, body, #root */
+}
 
-/* Example: If you want to reset default link styles globally */
+/* Optional: Global link reset */
 a {
-  text-decoration: none; /* Remove underline by default */
-  color: inherit; /* Inherit color from parent by default */
+  text-decoration: none;
+  color: inherit;
 }
