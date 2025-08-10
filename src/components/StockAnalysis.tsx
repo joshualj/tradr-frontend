@@ -2,6 +2,8 @@
 
 import React, { useState } from 'react';
 import { gql, useLazyQuery } from '@apollo/client';
+// *** NEW: Import the StockChart component
+import StockChart from './StockChart';
 
 // Define your GraphQL query using gql tag
 const GET_STOCK_ANALYSIS = gql`
@@ -33,9 +35,19 @@ const GET_STOCK_ANALYSIS = gql`
       bollingerBandSignal
       signalScore
       scoreInterpretation
+      historicalPrices {
+        date
+        close
+      }
     }
   }
 `;
+
+// Define the new interface for historical prices
+interface HistoricalPrice {
+  date: string;
+  close: number;
+}
 
 interface StockAnalysisResult {
   message: string;
@@ -63,6 +75,7 @@ interface StockAnalysisResult {
   bollingerBandSignal: string | null;
   signalScore: number | null;
   scoreInterpretation: string | null;
+  historicalPrices: HistoricalPrice[] | null;
 }
 
 interface GetStockAnalysisData {
@@ -96,6 +109,14 @@ const StockAnalysis: React.FC = () => {
       <div className="mt-6 p-4 border border-gray-200 rounded-lg shadow-sm bg-white">
         <h3 className="text-xl font-semibold text-indigo-700 mb-2">Analysis Results for {analysis.receivedTicker}</h3>
         
+        {/* *** NEW SECTION: HISTORICAL PRICES CHART *** */}
+        {analysis.historicalPrices && analysis.historicalPrices.length > 0 && (
+          <div className="mb-4">
+            <h4 className="text-lg font-semibold text-indigo-600 mb-2">Historical Price Chart:</h4>
+            <StockChart data={analysis.historicalPrices} />
+          </div>
+        )}
+
         {/* Basic Statistical Analysis */}
         <div className="mb-4">
           <p className="text-gray-700 mb-1">
@@ -163,6 +184,23 @@ const StockAnalysis: React.FC = () => {
             <li><span className="font-medium">Bollinger Band Signal:</span> {analysis.bollingerBandSignal || 'N/A'}</li>
           </ul>
         </div>
+
+                {/* --- NEW SECTION: HISTORICAL PRICES --- */}
+        {/* <div className="mb-4">
+          <h4 className="text-lg font-semibold text-indigo-600 mb-2">Historical Prices:</h4>
+          {analysis.historicalPrices && analysis.historicalPrices.length > 0 ? (
+            <ul className="list-disc list-inside text-gray-700 ml-4 h-48 overflow-y-scroll bg-gray-100 p-2 rounded">
+              {analysis.historicalPrices.map((price, index) => (
+                <li key={index}>
+                  <span className="font-medium">{price.date}:</span> ${price.close.toFixed(2)}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-gray-500 italic">No historical price data available.</p>
+          )}
+        </div> */}
+        {/* --- END NEW SECTION --- */}
 
         {/* Overall Signal Score */}
         <div>
