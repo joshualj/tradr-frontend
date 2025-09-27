@@ -1,11 +1,9 @@
-// tradr-web-app/src/components/StockAnalysis.tsx
-
 import React, { useState } from 'react';
 import { gql, useLazyQuery } from '@apollo/client';
-// *** NEW: Import the StockChart component
+// Import the StockChart component
 import StockChart from './StockChart';
 
-// Define your GraphQL query using gql tag
+// Define the GraphQL query with the new 'historicalPrices' field
 const GET_STOCK_ANALYSIS = gql`
   query GetStockAnalysis($ticker: String!, $duration: Int!, $unit: String!) {
     analyzeStock(ticker: $ticker, duration: $duration, unit: $unit) {
@@ -17,7 +15,6 @@ const GET_STOCK_ANALYSIS = gql`
       pValue
       error
       latestPrice
-      # --- FIX: Explicitly request subfields for indicatorValues ---
       indicatorValues {
         SMA50
         RSI
@@ -27,9 +24,7 @@ const GET_STOCK_ANALYSIS = gql`
         BB_Middle
         BB_Upper
         BB_Lower
-        # Add any other indicator fields here if you expand your IndicatorValues type in schema.ts
       }
-      # --- END FIX ---
       rsiSignal
       macdSignal
       bollingerBandSignal
@@ -49,6 +44,7 @@ interface HistoricalPrice {
   close: number;
 }
 
+// Update the main interface to include the new field
 interface StockAnalysisResult {
   message: string;
   receivedTicker: string;
@@ -58,7 +54,6 @@ interface StockAnalysisResult {
   pValue: number | null;
   error: string | null;
   latestPrice: number | null;
-  // Update the interface to reflect the nested structure
   indicatorValues: {
     SMA50?: number;
     RSI?: number;
@@ -68,7 +63,7 @@ interface StockAnalysisResult {
     BB_Middle?: number;
     BB_Upper?: number;
     BB_Lower?: number;
-    [key: string]: number | undefined; // Allow for other potential indicator keys if needed
+    [key: string]: number | undefined;
   } | null;
   rsiSignal: string | null;
   macdSignal: string | null;
@@ -97,7 +92,6 @@ const StockAnalysis: React.FC = () => {
   };
 
   const renderAnalysisResult = () => {
-    if (!called && !submitted) return null;
     if (loading) return <p className="text-center text-gray-600">Loading stock analysis...</p>;
     if (error) return <p className="text-center text-red-600">Error: {error.message}</p>;
 
@@ -106,26 +100,25 @@ const StockAnalysis: React.FC = () => {
     if (!analysis) return <p className="text-center text-gray-500">No analysis data found.</p>;
 
     return (
-      <div className="mt-6 p-4 border border-gray-200 rounded-lg shadow-sm bg-white">
-        <h3 className="text-xl font-semibold text-indigo-700 mb-2">Analysis Results for {analysis.receivedTicker}</h3>
-        
-        {/* *** NEW SECTION: HISTORICAL PRICES CHART *** */}
+      <div className="space-y-6">
+        {/* Card for Historical Price Chart */}
         {analysis.historicalPrices && analysis.historicalPrices.length > 0 && (
-          <div className="mb-4">
-            <h4 className="text-lg font-semibold text-indigo-600 mb-2">Historical Price Chart:</h4>
+          <div className="p-6 border border-gray-200 rounded-xl shadow-md bg-white">
+            <h4 className="text-xl font-bold text-indigo-700 mb-4">Historical Price Chart</h4>
             <StockChart data={analysis.historicalPrices} />
           </div>
         )}
 
-        {/* Basic Statistical Analysis */}
-        <div className="mb-4">
-          <p className="text-gray-700 mb-1">
-            <span className="font-semibold">Latest Price:</span> ${analysis.latestPrice?.toFixed(2) || 'N/A'}
+        {/* Card for Key Data and Statistical Analysis */}
+        <div className="p-6 border border-gray-200 rounded-xl shadow-md bg-white">
+          <h4 className="text-xl font-bold text-indigo-700 mb-4">Key Data</h4>
+          <p className="text-gray-800 text-lg font-medium mb-2">
+            <span className="font-bold">Latest Price:</span> ${analysis.latestPrice?.toFixed(2) || 'N/A'}
           </p>
-          <p className="text-gray-700 mb-1">{analysis.message}</p>
+          <p className="text-gray-700 mb-2">{analysis.message}</p>
           {analysis.isStatisticallySignificant !== null && (
-            <p className="text-gray-700 mb-1">
-              <span className="font-semibold">Statistically Significant:</span>{" "}
+            <p className="text-gray-700 mb-2">
+              <span className="font-bold">Statistically Significant:</span>{" "}
               <strong className={`${analysis.isStatisticallySignificant ? 'text-green-600' : 'text-red-600'}`}>
                 {analysis.isStatisticallySignificant ? "Yes" : "No"}
               </strong>
@@ -133,17 +126,16 @@ const StockAnalysis: React.FC = () => {
           )}
           {analysis.pValue !== null && (
             <p className="text-gray-700">
-              <span className="font-semibold">P-Value:</span> <strong className="text-indigo-800">{analysis.pValue.toFixed(4)}</strong>
+              <span className="font-bold">P-Value:</span> <strong className="text-indigo-800">{analysis.pValue.toFixed(4)}</strong>
             </p>
           )}
         </div>
 
-        {/* Technical Indicators */}
-        <div className="mb-4">
-          <h4 className="text-lg font-semibold text-indigo-600 mb-2">Technical Indicators:</h4>
+        {/* Card for Technical Indicators */}
+        <div className="p-6 border border-gray-200 rounded-xl shadow-md bg-white">
+          <h4 className="text-xl font-bold text-indigo-700 mb-4">Technical Indicators</h4>
           {analysis.indicatorValues && Object.keys(analysis.indicatorValues).length > 0 ? (
-            <ul className="list-disc list-inside text-gray-700 ml-4">
-              {/* Iterate over the specific indicator fields */}
+            <ul className="list-disc list-inside text-gray-700 ml-4 space-y-1">
               {analysis.indicatorValues.SMA50 !== undefined && (
                 <li><span className="font-medium">SMA50:</span> {analysis.indicatorValues.SMA50?.toFixed(2) || 'N/A'}</li>
               )}
@@ -168,57 +160,22 @@ const StockAnalysis: React.FC = () => {
               {analysis.indicatorValues.BB_Lower !== undefined && (
                 <li><span className="font-medium">BB Lower:</span> {analysis.indicatorValues.BB_Lower?.toFixed(2) || 'N/A'}</li>
               )}
-              {/* If you have other dynamic keys, you might need a more generic loop or a custom scalar */}
             </ul>
           ) : (
             <p className="text-gray-500 italic">No technical indicator values available (likely insufficient data).</p>
           )}
         </div>
 
-        {/* Signal Interpretation */}
-        <div className="mb-4">
-          <h4 className="text-lg font-semibold text-indigo-600 mb-2">Signal Interpretation:</h4>
-          <ul className="list-disc list-inside text-gray-700 ml-4">
+        {/* Card for Signal Interpretation */}
+        <div className="p-6 border border-gray-200 rounded-xl shadow-md bg-white">
+          <h4 className="text-xl font-bold text-indigo-700 mb-4">Signal Interpretation</h4>
+          <ul className="list-disc list-inside text-gray-700 ml-4 space-y-1">
             <li><span className="font-medium">RSI Signal:</span> {analysis.rsiSignal || 'N/A'}</li>
             <li><span className="font-medium">MACD Signal:</span> {analysis.macdSignal || 'N/A'}</li>
             <li><span className="font-medium">Bollinger Band Signal:</span> {analysis.bollingerBandSignal || 'N/A'}</li>
           </ul>
         </div>
-
-                {/* --- NEW SECTION: HISTORICAL PRICES --- */}
-        {/* <div className="mb-4">
-          <h4 className="text-lg font-semibold text-indigo-600 mb-2">Historical Prices:</h4>
-          {analysis.historicalPrices && analysis.historicalPrices.length > 0 ? (
-            <ul className="list-disc list-inside text-gray-700 ml-4 h-48 overflow-y-scroll bg-gray-100 p-2 rounded">
-              {analysis.historicalPrices.map((price, index) => (
-                <li key={index}>
-                  <span className="font-medium">{price.date}:</span> ${price.close.toFixed(2)}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-gray-500 italic">No historical price data available.</p>
-          )}
-        </div> */}
-        {/* --- END NEW SECTION --- */}
-
-        {/* Overall Signal Score */}
-        <div>
-          <h4 className="text-lg font-semibold text-indigo-600 mb-2">Overall Signal Score:</h4>
-          <p className="text-gray-700 text-xl font-bold">
-            Score: {analysis.signalScore !== null ? analysis.signalScore : 'N/A'} -{" "}
-            <span className={`
-              ${analysis.scoreInterpretation === 'Strong Buy' ? 'text-green-700' : ''}
-              ${analysis.scoreInterpretation === 'Buy' ? 'text-green-500' : ''}
-              ${analysis.scoreInterpretation === 'Neutral' ? 'text-gray-500' : ''}
-              ${analysis.scoreInterpretation === 'Sell' ? 'text-orange-500' : ''}
-              ${analysis.scoreInterpretation === 'Strong Sell' ? 'text-red-700' : ''}
-            `}>
-              {analysis.scoreInterpretation || 'N/A'}
-            </span>
-          </p>
-        </div>
-
+        
         {analysis.error && (
           <p className="text-red-600 mt-2">Analysis Error: {analysis.error}</p>
         )}
@@ -227,63 +184,96 @@ const StockAnalysis: React.FC = () => {
   };
 
   return (
-    <div className="p-4 bg-gray-50 rounded-lg shadow-inner">
-      <h2 className="text-2xl font-bold text-center text-indigo-700 mb-6">Stock Lookup</h2>
+    <div className="w-full min-h-screen p-8 font-sans">
+      {/* Container for the form and results */}
+      <div className="flex flex-col lg:flex-row lg:space-x-8 lg:items-start w-full">
+        {/* Left column for the form and overall score */}
+        <div className="flex-shrink-0 mb-6 lg:mb-0 w-full lg:w-1/3 space-y-6">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4 p-6 border border-gray-200 rounded-xl shadow-md bg-white">
+            <h2 className="text-3xl font-extrabold text-center text-indigo-800 mb-2">Stock Lookup</h2>
+            <div>
+              <label htmlFor="tickerInput" className="block text-gray-700 text-sm font-semibold mb-2">Stock Ticker:</label>
+              <input
+                id="tickerInput"
+                type="text"
+                value={ticker}
+                onChange={(e) => setTicker(e.target.value.toUpperCase())}
+                placeholder="e.g., AAPL, GOOGL"
+                required
+                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 transition duration-200"
+              />
+            </div>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4 p-5 border border-gray-200 rounded-xl shadow-md bg-white">
-        <div>
-          <label htmlFor="tickerInput" className="block text-gray-700 text-sm font-semibold mb-2">Stock Ticker:</label>
-          <input
-            id="tickerInput"
-            type="text"
-            value={ticker}
-            onChange={(e) => setTicker(e.target.value.toUpperCase())}
-            placeholder="e.g., AAPL, GOOGL"
-            required
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 transition duration-200"
-          />
-        </div>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1">
+                <label htmlFor="durationInput" className="block text-gray-700 text-sm font-semibold mb-2">Duration Value:</label>
+                <input
+                  id="durationInput"
+                  type="number"
+                  value={duration}
+                  onChange={(e) => setDuration(parseInt(e.target.value, 10) || 0)}
+                  min="1"
+                  required
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 transition duration-200"
+                />
+              </div>
 
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1">
-            <label htmlFor="durationInput" className="block text-gray-700 text-sm font-semibold mb-2">Duration Value:</label>
-            <input
-              id="durationInput"
-              type="number"
-              value={duration}
-              onChange={(e) => setDuration(parseInt(e.target.value, 10) || 0)}
-              min="1"
-              required
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 transition duration-200"
-            />
-          </div>
+              <div className="flex-1">
+                <label htmlFor="unitSelect" className="block text-gray-700 text-sm font-semibold mb-2">Duration Unit:</label>
+                <select
+                  id="unitSelect"
+                  value={unit}
+                  onChange={(e) => setUnit(e.target.value)}
+                  required
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 transition duration-200 bg-white"
+                >
+                  <option value="day">Day(s)</option>
+                  <option value="week">Week(s)</option>
+                  <option value="month">Month(s)</option>
+                  <option value="year">Year(s)</option>
+                </select>
+              </div>
+            </div>
 
-          <div className="flex-1">
-            <label htmlFor="unitSelect" className="block text-gray-700 text-sm font-semibold mb-2">Duration Unit:</label>
-            <select
-              id="unitSelect"
-              value={unit}
-              onChange={(e) => setUnit(e.target.value)}
-              required
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 transition duration-200 bg-white"
+            <button
+              type="submit"
+              className="px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition duration-200"
             >
-              <option value="day">Day(s)</option>
-              <option value="week">Week(s)</option>
-              <option value="month">Month(s)</option>
-              <option value="year">Year(s)</option>
-            </select>
-          </div>
+              Analyze Stock
+            </button>
+          </form>
+
+          {/* Moved Card for Overall Signal Score */}
+          {submitted && !loading && !error && data?.analyzeStock.signalScore !== null && (
+            <div className="p-6 border border-gray-200 rounded-xl shadow-md bg-white">
+              <h4 className="text-xl font-bold text-indigo-700 mb-4">Overall Signal Score</h4>
+              <p className="text-gray-700 text-3xl font-bold">
+                Score: {data?.analyzeStock.signalScore} -{" "}
+                <span className={`
+                  ${data?.analyzeStock.scoreInterpretation === 'Strong Buy' ? 'text-green-700' : ''}
+                  ${data?.analyzeStock.scoreInterpretation === 'Buy' ? 'text-green-500' : ''}
+                  ${data?.analyzeStock.scoreInterpretation === 'Neutral' ? 'text-gray-500' : ''}
+                  ${data?.analyzeStock.scoreInterpretation === 'Sell' ? 'text-orange-500' : ''}
+                  ${data?.analyzeStock.scoreInterpretation === 'Strong Sell' ? 'text-red-700' : ''}
+                `}>
+                  {data?.analyzeStock.scoreInterpretation || 'N/A'}
+                </span>
+              </p>
+            </div>
+          )}
         </div>
 
-        <button
-          type="submit"
-          className="px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition duration-200"
-        >
-          Analyze Stock
-        </button>
-      </form>
-
-      {renderAnalysisResult()}
+        {/* Right column for the results */}
+        <div className="lg:w-2/3 flex-1">
+          {submitted ? (
+            renderAnalysisResult()
+          ) : (
+            <div className="bg-white p-6 rounded-xl shadow-md h-full flex items-center justify-center">
+              <p className="text-center text-lg text-gray-500">Your stock analysis results will appear here.</p>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

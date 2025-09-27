@@ -1,5 +1,3 @@
-// src/App.tsx
-
 import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom'; // Import ReactDOM for createPortal
 import StockAnalysis from './components/StockAnalysis';
@@ -232,15 +230,15 @@ function App() {
         left: '100%', // Position the left edge of the element at the right edge of the viewport
         transform: 'translate(-115%, -160%) rotate(-90deg)', // Updated translate values based on user feedback
         transformOrigin: '100% 50%', // Pivot around the right-middle of the unrotated element
-        fontSize: '40vh',     // Use viewport height for vertical scaling
+        fontSize: '40vh',      // Use viewport height for vertical scaling
         color: 'rgb(107, 70, 193)', // Deeper purple color
-        opacity: 0.07,         // Reduced opacity for more subtlety
+        opacity: 0.07,          // Reduced opacity for more subtlety
         fontWeight: '900',    // Ultra bold
         textShadow: '2px 2px 4px rgba(0,0,0,0.05)', // Even more subtle shadow
-        display: 'block',     // Ensure it behaves as a block element
+        display: 'block',      // Ensure it behaves as a block element
         lineHeight: '1',      // Ensure line height doesn't collapse text
         whiteSpace: 'nowrap', // Prevent text from wrapping
-        overflow: 'hidden',   // Keep hidden for clean clipping
+        overflow: 'hidden',    // Keep hidden for clean clipping
         textAlign: 'center',  // Center text within its own rotated block
       }}>
         tradr
@@ -289,11 +287,11 @@ function App() {
         </div>
       </header>
 
-      <main className="container mx-auto p-6 relative z-20"> {/* Changed z-10 to z-20 for content */}
+      {/* Main content container with conditional centering */}
+      <main className={`container mx-auto p-6 relative z-20 ${currentPage === 'analysis' ? 'flex items-center justify-center' : ''}`}>
         {currentPage === 'analysis' && (
-          <div className="bg-white rounded-xl shadow-lg p-6 sm:p-8 max-w-2xl mx-auto">
-            <StockAnalysis />
-          </div>
+          // The fix: removed the wrapper div to let StockAnalysis component handle its own layout
+          <StockAnalysis />
         )}
         {currentPage === 'tracker' && user && (
           <div className="bg-white rounded-xl shadow-lg p-6 sm:p-8 max-w-3xl mx-auto">
