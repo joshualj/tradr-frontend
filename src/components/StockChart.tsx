@@ -1,4 +1,4 @@
-// tradr-web-app/src/components/StockChart.tsx
+// tradr-frontend-new/src/components/StockChart.tsx
 
 import React from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';

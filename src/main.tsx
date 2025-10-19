@@ -1,4 +1,4 @@
-// tradr-web-app/src/main.tsx
+// tradr-frontend-new/src/main.tsx
 
 import React from 'react';
 import ReactDOM from 'react-dom/client';
